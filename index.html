@@ -1,9 +1,48 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>显示一张图片</title>
-  </head>
-  <body>
-    <img src="https://cvbnnnnnbvc.github.io/pic/an.jpg">
-  </body>
+<head>
+    <title>反色图片</title>
+    <script>
+        function invertImage() {
+            var input = document.getElementById("imageInput");
+            var image = document.getElementById("outputImage");
+
+            var file = input.files[0];
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                var img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    var canvas = document.createElement("canvas");
+                    var ctx = canvas.getContext("2d");
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+
+                    ctx.drawImage(img, 0, 0);
+                    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                    for (var i = 0; i < imageData.data.length; i += 4) {
+                        // 反色处理
+                        imageData.data[i] = 255 - imageData.data[i]; // 红
+                        imageData.data[i + 1] = 255 - imageData.data[i + 1]; // 绿
+                        imageData.data[i + 2] = 255 - imageData.data[i + 2]; // 蓝
+                        // 不改变透明度
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
+                    image.src = canvas.toDataURL("image/png");
+                };
+            };
+
+            reader.readAsDataURL(file);
+        }
+    </script>
+</head>
+<body>
+    <h1>图片反色</h1>
+    <input type="file" id="imageInput" accept="image/*" onchange="invertImage()">
+    <br>
+    <img id="outputImage" style="max-width: 100%">
+</body>
 </html>
