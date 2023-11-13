@@ -1,48 +1,160 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>反色图片</title>
-    <script>
-        function invertImage() {
-            var input = document.getElementById("imageInput");
-            var image = document.getElementById("outputImage");
-
-            var file = input.files[0];
-            var reader = new FileReader();
-
-            reader.onload = function(e) {
-                var img = new Image();
-                img.src = e.target.result;
-                img.onload = function() {
-                    var canvas = document.createElement("canvas");
-                    var ctx = canvas.getContext("2d");
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-
-                    ctx.drawImage(img, 0, 0);
-                    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-                    for (var i = 0; i < imageData.data.length; i += 4) {
-                        // 反色处理
-                        imageData.data[i] = 255 - imageData.data[i]; // 红
-                        imageData.data[i + 1] = 255 - imageData.data[i + 1]; // 绿
-                        imageData.data[i + 2] = 255 - imageData.data[i + 2]; // 蓝
-                        // 不改变透明度
-                    }
-
-                    ctx.putImageData(imageData, 0, 0);
-                    image.src = canvas.toDataURL("image/png");
-                };
-            };
-
-            reader.readAsDataURL(file);
+    <meta charset="UTF-8">
+    <title>PinBall</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #000;
         }
-    </script>
+
+        #gameCanvas {
+            background: #000;
+            border: 2px solid green;
+        }
+
+        #game-over {
+            display: none;
+            position: absolute;
+            text-align: center;
+            font-size: 24px;
+            color: #fff;
+            z-index: 2;
+        }
+
+        #restart-button {
+            background: green;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>图片反色</h1>
-    <input type="file" id="imageInput" accept="image/*" onchange="invertImage()">
-    <br>
-    <img id="outputImage" style="max-width: 100%">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="game-over">
+        <p>End</p>
+        <button id="restart-button">Start Over!</button>
+    </div>
+
+    <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const gameOverScreen = document.getElementById('game-over');
+    const restartButton = document.getElementById('restart-button');
+
+    let gamePaused = false;
+    const gameTimeLimit = 999; // 游戏持续时间（秒）
+    let gameStartTime; // 游戏开始时间
+    let speedIncreaseInterval = 1; // 初始速度增加值
+
+    function startGame() {
+      gameStartTime = Date.now(); // 记录游戏开始时间
+      setInterval(increaseSpeed, 5000); // 每5秒增加速度一次
+      draw(); // 启动游戏循环
+    }
+
+    function stopGame() {
+      gamePaused = true;
+      gameOverScreen.style.display = 'block';
+    }
+
+    function updateTimer() {
+      const currentTime = Date.now();
+      const elapsedTime = (currentTime - gameStartTime) / 1000; // 转换为秒
+
+      if (elapsedTime >= gameTimeLimit) {
+        stopGame();
+      }
+
+      // 在左上角绘制时间
+      const remainingTime = Math.max(0, elapsedTime);
+      ctx.font = '20px Arial';
+      ctx.fillStyle = 'green';
+      ctx.fillText(`Time: ${remainingTime.toFixed(1)} s`, 10, 20);
+    }
+
+    restartButton.addEventListener('click', () => {
+      document.location.reload();
+    });
+
+    const ballRadius = 10;
+    let x = canvas.width / 2;
+    let y = canvas.height - 30;
+    let dx = 2;
+    let dy = -2;
+
+    const paddleWidth = 75;
+    const paddleHeight = 10;
+    let paddleX = (canvas.width - paddleWidth) / 2;
+
+    canvas.addEventListener('mousemove', mouseMoveHandler);
+
+    function mouseMoveHandler(e) {
+      const relativeX = e.clientX - canvas.getBoundingClientRect().left;
+      if (relativeX > 0 && relativeX < canvas.width) {
+        paddleX = relativeX - paddleWidth / 2;
+      }
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#0095DD';
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawPaddle() {
+      ctx.beginPath();
+      ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+      ctx.fillStyle = '#0095DD';
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function increaseSpeed() {
+      speedIncreaseInterval += 1; // 增加速度
+      dx = dx > 0 ? speedIncreaseInterval : -speedIncreaseInterval;
+      dy = dy > 0 ? speedIncreaseInterval : -speedIncreaseInterval;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBall();
+      drawPaddle();
+      updateTimer(); // 更新计时器
+
+      if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+        dx = -dx;
+      }
+      if (y + dy < ballRadius) {
+        dy = -dy;
+      } else if (y + dy > canvas.height - ballRadius) {
+        if (x > paddleX && x < paddleX + paddleWidth) {
+          dy = -dy;
+        } else {
+          stopGame();
+        }
+      }
+
+      if (!gamePaused) {
+        x += dx;
+        y += dy;
+        requestAnimationFrame(draw);
+      }
+    }
+
+    startGame(); // 启动游戏
+    </script>
 </body>
 </html>
