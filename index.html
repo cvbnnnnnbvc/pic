@@ -3,172 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图像转ASCII字符显示</title>
     <style>
         body {
-            font-family: 'Courier New', monospace;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        header {
+            background-color: #333;
+            padding: 10px;
+            color: #fff;
             text-align: center;
+        }
+        #container {
+            height: 100vh;
+            overflow-y: scroll;
+        }
+        #upload-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #image-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #upload-input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        canvas {
+            display: none;
+            width: 500px;
             margin: 20px;
-            background-color: rgb(48, 160, 152);
-            color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        h1 {
-            color: white;
+        #info {
+            margin: 10px;
+            color: #333;
         }
-
-        #uploadButton {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-            background: linear-gradient(to right, #3498db, #9b59b6);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.3s;
-            position: relative;
-            top: -15px;
+        #colorBlock {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #000;
+            margin-left: 10px;
+            border-radius: 5px;
         }
-
-        #uploadButton:hover {
-            background: linear-gradient(to right, #9b59b6, #3498db);
+        #coordinateInput {
+            margin: 10px;
+            padding: 5px;
         }
-
-        #fileLabel {
-            color: white;
+        #selectedColor {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #000;
+            margin-left: 10px;
+            border-radius: 50%;
+        }
+        #colorInfo {
+            display: flex;
+            align-items: center;
             margin-top: 10px;
         }
-
-        #asciiOutput {
-            font-size: 10px;
-            white-space: pre-wrap;
-            margin-top: 10px; /* 上移ASCII区域 */
-            background-color: #ccc;
-            padding: 10px;
-            display: inline-block;
-            color: black; /* 将ASCII文本颜色设置为黑色 */
-        }
-
-        #outputCanvas {
-            max-width: 100%;
-            width: 1250px;
-            height: 500px;
-            margin-top: 20px;
+        #radioContainer {
+            margin: 20px;
+            display: flex;
+            align-items: center;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var imageContainer = document.getElementById('image-container');
+            var originalImage = document.getElementById('original-image');
+            var processedImage = document.getElementById('processed-image');
+            var ctxOriginal = originalImage.getContext('2d');
+            var ctxProcessed = processedImage.getContext('2d');
+
+            var uploadInput = document.getElementById('upload-input');
+            var infoDiv = document.getElementById('info');
+            var coordinateInput = document.getElementById('coordinateInput');
+            var selectedColor = document.getElementById('selectedColor');
+            var radioContainer = document.getElementById('radioContainer');
+            var redModeCheckbox = document.createElement('input');
+            redModeCheckbox.type = 'radio';
+            redModeCheckbox.name = 'colorMode';
+            redModeCheckbox.value = 'redMode';
+            redModeCheckbox.id = 'redMode';
+            var redModeLabel = document.createElement('label');
+            redModeLabel.htmlFor = 'redMode';
+            redModeLabel.textContent = '红色模式';
+            radioContainer.appendChild(redModeCheckbox);
+            radioContainer.appendChild(redModeLabel);
+
+            var blueModeCheckbox = document.createElement('input');
+            blueModeCheckbox.type = 'radio';
+            blueModeCheckbox.name = 'colorMode';
+            blueModeCheckbox.value = 'blueMode';
+            blueModeCheckbox.id = 'blueMode';
+            var blueModeLabel = document.createElement('label');
+            blueModeLabel.htmlFor = 'blueMode';
+            blueModeLabel.textContent = '蓝色模式';
+            radioContainer.appendChild(blueModeCheckbox);
+            radioContainer.appendChild(blueModeLabel);
+            var colorMode = 'original'; 
+
+            redModeCheckbox.addEventListener('change', function() {
+                colorMode = 'redMode';
+                applyImageProcessing();
+            });
+
+            blueModeCheckbox.addEventListener('change', function() {
+                colorMode = 'blueMode';
+                applyImageProcessing();
+            });
+            uploadInput.addEventListener('change', handleFileSelect);
+            document.addEventListener('mousemove', function(event) {
+                if (originalImage.style.display === 'block' && event.clientX <= 500) {
+                    var rect = originalImage.getBoundingClientRect();
+                    var x = event.clientX - rect.left;
+                    var y = event.clientY - rect.top;
+                    var imageData = ctxOriginal.getImageData(x, y, 1, 1).data;
+                    var rgb = 'RGB: ' + imageData[0] + ', ' + imageData[1] + ', ' + imageData[2];
+                    infoDiv.innerText = rgb;
+                    document.getElementById('colorBlock').style.backgroundColor =
+                        'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
+                }
+            });
+            originalImage.addEventListener('click', function(event) {
+                var rect = originalImage.getBoundingClientRect();
+                var x = event.clientX - rect.left;
+                var y = event.clientY - rect.top;
+                var imageData = ctxOriginal.getImageData(x, y, 1, 1).data;
+                var rgb = 'RGB: ' + imageData[0] + ', ' + imageData[1] + ', ' + imageData[2];
+                coordinateInput.value = rgb;
+                selectedColor.style.backgroundColor =
+                    'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
+            });
+
+            function handleFileSelect(event) {
+                var file = event.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var img = new Image();
+                        img.onload = function() {
+                            originalImage.width = 500;
+                            originalImage.height = img.height * (500 / img.width);
+                            ctxOriginal.drawImage(img, 0, 0, originalImage.width, originalImage.height);
+                            originalImage.style.display = 'block';
+                            processedImage.width = 500;
+                            processedImage.height = originalImage.height;
+                            ctxProcessed.drawImage(originalImage, 0, 0, processedImage.width, processedImage.height);
+                            processedImage.style.display = 'block';
+                            imageContainer.style.display = 'flex';
+                            applyImageProcessing();
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            function applyImageProcessing() {
+                var imageData = ctxProcessed.getImageData(0, 0, processedImage.width, processedImage.height);
+                for (var i = 0; i < imageData.data.length; i += 4) {
+                    var red = imageData.data[i];
+                    var blue = imageData.data[i + 2];
+                    if (colorMode === 'redMode' && blue > red) {
+                        imageData.data[i] = blue;
+                        imageData.data[i + 2] = red;
+                    } else if (colorMode === 'blueMode' && red > blue) {
+                        imageData.data[i] = blue;
+                        imageData.data[i + 2] = red;
+                    }
+                }
+                ctxProcessed.putImageData(imageData, 0, 0);
+            }
+        });
+    </script>
 </head>
 <body>
-    <h1>图像转ASCII字符显示</h1>
-    
-    <input type="file" id="imageInput" accept="image/*" style="display: none;">
-    <button id="uploadButton">选择图片</button>
-    <br>
-    <span id="fileLabel"></span>
-    <br><br>
-    <pre id="asciiOutput"></pre>
-
-    <script>
-        document.getElementById('uploadButton').addEventListener('click', function () {
-            document.getElementById('imageInput').click();
-        });
-
-        document.getElementById('imageInput').addEventListener('change', handleImage);
-
-        function handleImage(event) {
-            const input = event.target;
-            const reader = new FileReader();
-
-            reader.onload = function () {
-                const img = new Image();
-                img.src = reader.result;
-
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    // 将图片宽度拉长2.5倍
-                    canvas.width = img.width * 2.5;
-                    canvas.height = img.height;
-
-                    // 将图片绘制到画布上
-                    ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imageData.data;
-
-                    // 将图片转换为黑白
-                    for (let i = 0; i < data.length; i += 4) {
-                        const grayscale = data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11;
-                        data[i] = grayscale;
-                        data[i + 1] = grayscale;
-                        data[i + 2] = grayscale;
-                    }
-
-                    ctx.putImageData(imageData, 0, 0);
-
-                    // 打码并显示转换后的图片
-                    const asciiOutput = document.getElementById('asciiOutput');
-                    const asciiArt = pixelateAndGetAscii(ctx, 20);
-                    asciiOutput.textContent = asciiArt;
-
-                    // 显示打码后的图片
-                    const outputCanvas = document.getElementById('outputCanvas');
-                    outputCanvas.width = canvas.width;
-                    outputCanvas.height = canvas.height;
-                    const outputCtx = outputCanvas.getContext('2d');
-                    outputCtx.drawImage(ctx.canvas, 0, 0, canvas.width, canvas.height);
-
-                    // 显示选择的文件名
-                    const fileLabel = document.getElementById('fileLabel');
-                    fileLabel.textContent = `选择的文件：${input.files[0].name}`;
-                };
-            };
-
-            reader.readAsDataURL(input.files[0]);
-        }
-
-        function pixelateAndGetAscii(context, blockSize) {
-            const imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
-            const data = imageData.data;
-            let asciiArt = '';
-
-            // ASCII字符集，可以根据需要进行调整
-            const asciiChars = ['@', '#', 'S', '%', '?', '*', '+', ';', ':', ',', '.'];
-
-            // 分割为小块，计算每块的平均灰度值
-            for (let y = 0; y < context.canvas.height; y += blockSize) {
-                for (let x = 0; x < context.canvas.width; x += blockSize) {
-                    let sumGray = 0, count = 0;
-
-                    // 计算每块的平均灰度值
-                    for (let blockY = y; blockY < y + blockSize && blockY < context.canvas.height; blockY++) {
-                        for (let blockX = x; blockX < x + blockSize && blockX < context.canvas.width; blockX++) {
-                            const index = (blockY * context.canvas.width + blockX) * 4;
-                            sumGray += data[index];
-                            count++;
-                        }
-                    }
-
-                    // 计算平均灰度值
-                    const avgGray = sumGray / count;
-
-                    // 映射到ASCII字符集
-                    const asciiIndex = Math.floor((avgGray / 255) * (asciiChars.length - 1));
-                    const asciiChar = asciiChars[asciiIndex];
-
-                    // 添加到ASCII艺术字符串
-                    asciiArt += asciiChar;
-                }
-
-                // 换行
-                asciiArt += '\n';
-            }
-
-            return asciiArt;
-        }
-    </script>
+    <header>
+        <h1>图像处理</h1>
+    </header>
+    <div id="container">
+        <div id="upload-container">
+            <input type="file" id="upload-input" accept="image/*">
+            <div id="info"></div>
+        </div>
+        <div id="colorInfo">
+            <div id="colorBlock"></div>
+            <input type="text" id="coordinateInput" readonly>
+            <div id="selectedColor"></div>
+        </div>
+        <div id="radioContainer"></div>
+        <div id="image-container">
+            原始的图像
+            <canvas id="original-image"></canvas>
+            处理后的图像
+            <canvas id="processed-image"></canvas>
+        </div>
+    </div>
 </body>
 </html>
