@@ -15,6 +15,12 @@
             color: #fff;
             text-align: center;
         }
+        input[type="radio"] {
+            font-size: 20px;
+        }
+        label[for="redMode"], label[for="blueMode"] {
+            font-size: 20px; 
+        }
         #upload-container {
             display: flex;
             justify-content: space-between;
@@ -123,7 +129,7 @@
             redModeCheckbox.id = 'redMode';
             var redModeLabel = document.createElement('label');
             redModeLabel.htmlFor = 'redMode';
-            redModeLabel.textContent = '红色模式';
+            redModeLabel.textContent = '红模式';
             radioContainer.appendChild(redModeCheckbox);
             radioContainer.appendChild(redModeLabel);
             var blueModeCheckbox = document.createElement('input');
@@ -133,7 +139,7 @@
             blueModeCheckbox.id = 'blueMode';
             var blueModeLabel = document.createElement('label');
             blueModeLabel.htmlFor = 'blueMode';
-            blueModeLabel.textContent = '蓝色模式';
+            blueModeLabel.textContent = '蓝模式';
             radioContainer.appendChild(blueModeCheckbox);
             radioContainer.appendChild(blueModeLabel);
             var colorMode = 'original'; 
@@ -147,30 +153,40 @@
             });
             uploadInput.addEventListener('change', handleFileSelect);
             document.addEventListener('mousemove', function(event) {
-                if (originalImage.style.display === 'block') {
-                    var rect = originalImage.getBoundingClientRect();
-                    var scaleX = originalImage.width / rect.width;
-                    var scaleY = originalImage.height / rect.height;
-                    var x = (event.clientX - rect.left) * scaleX;
-                    var y = (event.clientY - rect.top) * scaleY;
-                    x = Math.min(originalImage.width - 1, Math.max(0, x));
-                    y = Math.min(originalImage.height - 1, Math.max(0, y));
-                    var imageData = ctxOriginal.getImageData(x, y, 1, 1).data;
-                    var rgb = 'RGB: ' + imageData[0] + ', ' + imageData[1] + ', ' + imageData[2];
-                    infoDiv.innerText = rgb;
-                    document.getElementById('colorBlock').style.backgroundColor =
-                        'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
-                    }
-                    });
-            originalImage.addEventListener('click', function(event) {
+            if (originalImage.style.display === 'block') {
                 var rect = originalImage.getBoundingClientRect();
-                var x = event.clientX - rect.left;
-                var y = event.clientY - rect.top;
-                var imageData = ctxOriginal.getImageData(x, y, 1, 1).data;
+                var scaleX = originalImage.width / rect.width;
+                var scaleY = originalImage.height / rect.height;
+                var x = (event.clientX - rect.left) * scaleX;
+                var y = (event.clientY - rect.top) * scaleY;
+                x = Math.min(originalImage.width - 1, Math.max(0, x));
+                y = Math.min(originalImage.height - 1, Math.max(0, y));
+                // 获取图像内坐标
+                var imageX = Math.floor(x);
+                var imageY = Math.floor(y);
+                var imageData = ctxOriginal.getImageData(imageX, imageY, 1, 1).data;
                 var rgb = 'RGB: ' + imageData[0] + ', ' + imageData[1] + ', ' + imageData[2];
-                coordinateInput.value = rgb;
-                selectedColor.style.backgroundColor =
-                    'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
+                infoDiv.innerText = rgb;
+                document.getElementById('colorBlock').style.backgroundColor =
+                'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
+                }
+            });
+            originalImage.addEventListener('click', function(event) {
+            var rect = originalImage.getBoundingClientRect();
+            var scaleX = originalImage.width / rect.width;
+            var scaleY = originalImage.height / rect.height;
+            var x = (event.clientX - rect.left) * scaleX;
+            var y = (event.clientY - rect.top) * scaleY;
+            x = Math.min(originalImage.width - 1, Math.max(0, x));
+            y = Math.min(originalImage.height - 1, Math.max(0, y));
+            // 获取图像内坐标
+            var imageX = Math.floor(x);
+            var imageY = Math.floor(y);
+            var imageData = ctxOriginal.getImageData(imageX, imageY, 1, 1).data;
+            var rgb = 'RGB: ' + imageData[0] + ', ' + imageData[1] + ', ' + imageData[2];
+            coordinateInput.value = rgb;
+            selectedColor.style.backgroundColor =
+            'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
             });
             function handleFileSelect(event) {
                 var file = event.target.files[0];
@@ -243,7 +259,7 @@
         <div id="image-container">
             <h3>原始的图像</h3>
             <canvas id="original-image"></canvas>
-            <h3>处理后的图像</h3>
+            <h3>选择“红”或“蓝”模式处理后的图像</h3>
             <canvas id="processed-image"></canvas>
             <a id="download-button" onclick="downloadProcessedImage()" download>下载</a>
         </div>
