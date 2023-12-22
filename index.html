@@ -15,10 +15,6 @@
             color: #fff;
             text-align: center;
         }
-        #container {
-            height: 100vh;
-            overflow-y: scroll;
-        }
         #upload-container {
             display: flex;
             justify-content: space-between;
@@ -48,13 +44,13 @@
         padding: 10px;
         background-color: #fff;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        max-width: 500px; /* 设置最大宽度 */
-        margin: auto; /* 居中显示 */
+        max-width: 500px; 
+        margin: auto; 
         }
         canvas {
         display: none;
-        width: 100%; /* 设置 canvas 宽度为百分百，以适应容器宽度 */
-        max-height: 400px; /* 设置最大高度 */
+        width: 100%; 
+        max-height: 400px; 
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         #info {
@@ -101,11 +97,11 @@
         margin: 10px;
         cursor: pointer;
         border-radius: 5px;
-        font-weight: bold; /* 加粗 */
-        font-style: italic; /* 斜体 */
+        font-weight: bold; 
+        font-style: italic; 
     }
     header h3 {
-        font-style: italic; /* 将 h1 和 h2 元素的文字设置为斜体 */
+        font-style: italic; 
     }
     </style>
     <script>
@@ -115,7 +111,6 @@
             var processedImage = document.getElementById('processed-image');
             var ctxOriginal = originalImage.getContext('2d');
             var ctxProcessed = processedImage.getContext('2d');
-
             var uploadInput = document.getElementById('upload-input');
             var infoDiv = document.getElementById('info');
             var coordinateInput = document.getElementById('coordinateInput');
@@ -131,7 +126,6 @@
             redModeLabel.textContent = '红色模式';
             radioContainer.appendChild(redModeCheckbox);
             radioContainer.appendChild(redModeLabel);
-
             var blueModeCheckbox = document.createElement('input');
             blueModeCheckbox.type = 'radio';
             blueModeCheckbox.name = 'colorMode';
@@ -143,12 +137,10 @@
             radioContainer.appendChild(blueModeCheckbox);
             radioContainer.appendChild(blueModeLabel);
             var colorMode = 'original'; 
-
             redModeCheckbox.addEventListener('change', function() {
                 colorMode = 'redMode';
                 applyImageProcessing();
             });
-
             blueModeCheckbox.addEventListener('change', function() {
                 colorMode = 'blueMode';
                 applyImageProcessing();
@@ -159,14 +151,10 @@
                     var rect = originalImage.getBoundingClientRect();
                     var scaleX = originalImage.width / rect.width;
                     var scaleY = originalImage.height / rect.height;
-
                     var x = (event.clientX - rect.left) * scaleX;
                     var y = (event.clientY - rect.top) * scaleY;
-
-                    // 确保坐标在合法范围内
                     x = Math.min(originalImage.width - 1, Math.max(0, x));
                     y = Math.min(originalImage.height - 1, Math.max(0, y));
-
                     var imageData = ctxOriginal.getImageData(x, y, 1, 1).data;
                     var rgb = 'RGB: ' + imageData[0] + ', ' + imageData[1] + ', ' + imageData[2];
                     infoDiv.innerText = rgb;
@@ -174,7 +162,6 @@
                         'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
                     }
                     });
-
             originalImage.addEventListener('click', function(event) {
                 var rect = originalImage.getBoundingClientRect();
                 var x = event.clientX - rect.left;
@@ -185,7 +172,6 @@
                 selectedColor.style.backgroundColor =
                     'rgb(' + imageData[0] + ',' + imageData[1] + ',' + imageData[2] + ')';
             });
-
             function handleFileSelect(event) {
                 var file = event.target.files[0];
                 if (file) {
@@ -225,21 +211,18 @@
                 ctxProcessed.putImageData(imageData, 0, 0);
             }
         });
-        function downloadProcessedImage() {
-    var canvas = document.getElementById('processed-image');
-    var downloadButton = document.getElementById('download-button');
-    // 检查是否选择了图像
-    var originalImage = document.getElementById('original-image');
-    if (originalImage.style.display !== 'block') {
-        alert('请先选择要处理的图像文件');
-        return;
-    }
-    // 获取图像数据
-    var dataURL = canvas.toDataURL('image/png');
-    // 设置下载链接的 href 属性
-    downloadButton.href = dataURL;
-}
-
+            function downloadProcessedImage() {
+                var canvas = document.getElementById('processed-image');
+                var downloadButton = document.getElementById('download-button');
+                // 检查是否选择了图像
+                var originalImage = document.getElementById('original-image');
+                if (originalImage.style.display !== 'block') {
+                    alert('请先选择要处理的图像文件');
+                    return;
+                }
+                var dataURL = canvas.toDataURL('image/png');
+                downloadButton.href = dataURL;
+            }
     </script>
 </head>
 <body>
