@@ -81,14 +81,13 @@
     <div id="info" style="padding:0.5rem 0;display:none;color:#666">请稍等</div>
     <div id="imagebox" style="padding:0 1rem"></div>
     <script>
-      function logistic(x, n) {
-        let l = [x];
-        n--;
-        while (n >= 0) {
-          l.push(x = 3.9999999 * x * (1 - x));
-          n--;
+       function logistic(x,n){
+        let l=[x]
+        n--
+        while(n-->0){
+          l.push(x=3.9999999*x*(1-x))
         }
-        return l;
+        return l
       }
       function logisticmap(l){
         return l.map((x,a)=>[x,a]).sort(logisticmapsort).map(x=>x[1])
