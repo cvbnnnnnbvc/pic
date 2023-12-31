@@ -6,12 +6,13 @@
   <title>颜色RGB分离</title>
   <style>
     body {
-    display: flex;
+      display: flex;
       flex-direction: column;
       align-items: center;
       margin-bottom: 20px;
       font-weight: bold;
     }
+
     button {
       margin-top: 10px;
       margin-bottom: 10px;
@@ -24,48 +25,59 @@
       cursor: pointer;
       font-weight: bold;
     }
+
     button:hover {
       background-color: #45a049;
     }
+
     div {
-        margin-top: 5px;
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
+
 <input type="file" id="imageInput" accept="image/*">
 <div>
-    <div>
-        <label>
-        <input type="checkbox" id="redCheckbox"> 去除红色分量
-      </label>
-    </div>
-    <div><label>
-        <input type="checkbox" id="greenCheckbox"> 去除绿色分量
-      </label>
-    </div>
-   <div>
+  <div>
     <label>
-        <input type="checkbox" id="blueCheckbox"> 去除蓝色分量
-      </label>
-   </div>
+      <input type="checkbox" id="redCheckbox"> 去除红色分量
+    </label>
+  </div>
+  <div>
+    <label>
+      <input type="checkbox" id="greenCheckbox"> 去除绿色分量
+    </label>
+  </div>
+  <div>
+    <label>
+      <input type="checkbox" id="blueCheckbox"> 去除蓝色分量
+    </label>
+  </div>
 </div>
 <button onclick="processImage()">勾选确认</button>
+<button onclick="downloadImage()">下载图片</button>
 <canvas id="canvas" style="max-width: 100%;"></canvas>
+
 <script>
 function processImage() {
   const input = document.getElementById('imageInput');
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
+
   if (input.files && input.files[0]) {
     const reader = new FileReader();
+
     reader.onload = function (e) {
       const img = new Image();
+
       img.onload = function () {
         const scaleFactor = 500 / img.width;
         canvas.width = 500;
         canvas.height = img.height * scaleFactor;
+
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         manipulateImage(imageData);
         ctx.putImageData(imageData, 0, 0);
@@ -74,14 +86,17 @@ function processImage() {
 
       img.src = e.target.result;
     };
+
     reader.readAsDataURL(input.files[0]);
   }
 }
+
 function manipulateImage(imageData) {
   const data = imageData.data;
   const redCheckbox = document.getElementById('redCheckbox');
   const greenCheckbox = document.getElementById('greenCheckbox');
   const blueCheckbox = document.getElementById('blueCheckbox');
+
   for (let i = 0; i < data.length; i += 4) {
     if (redCheckbox.checked) {
       data[i] = 0;
@@ -93,6 +108,17 @@ function manipulateImage(imageData) {
       data[i + 2] = 0;
     }
   }
+}
+
+function downloadImage() {
+  const canvas = document.getElementById('canvas');
+  const url = canvas.toDataURL("image/png");
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'processed_image.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 </script>
 
