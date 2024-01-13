@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像低通滤波器</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color:#252525;
+            color: #ffffff;
+        }
+        div {
+            text-align: center;
+        }
+        #imageInput {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        #edgeCanvas {
+            border: 2px solid #3b3b3b;
+            height: 500px;
+        }
+        #downloadButton {
+            margin-top: 10px;
+            display: none;
+        }
+        button {
+            margin-top: 15px; 
+            border-radius: 8px; 
+            background-color: rgb(45, 142, 187); 
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer; /* 鼠标指针样式为手型 */
+            color:#fff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <input type="file" id="imageInput" accept="image/*">
+        <br>
+        <canvas id="edgeCanvas"></canvas>
+        <button id="downloadButton" onclick="downloadImage()">下载</button>
+    </div>
+    <script>
+        document.getElementById('imageInput').addEventListener('change', handleImage);
+        function handleImage(e) {
+            var canvas = document.getElementById('edgeCanvas');
+            var context = canvas.getContext('2d');
+            var img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                context.fillStyle = 'white'; // 设置背景为白色
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(img, 0, 0, img.width, img.height);
+                applyEdgeDetection(canvas, context);
+                showDownloadButton();
+            };
+            img.src = URL.createObjectURL(e.target.files[0]);
+        }
+        function applyEdgeDetection(canvas, context) {
+            var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            // Sobel边缘检测
+            var sobelData = new Float32Array(data.length);
+            applySobelFilter(data, sobelData, canvas.width, canvas.height);
+            // 将处理后的数据放回Canvas
+            for (var i = 0; i < data.length; i += 4) {
+                var magnitude = sobelData[i]; // 取边缘强度
+                // 将边缘线设置为黑色，背景设置为白色
+                data[i] = 255 - magnitude;
+                data[i + 1] = 255 - magnitude;
+                data[i + 2] = 255 - magnitude;
+            }
+            context.putImageData(imageData, 0, 0);
+        }
+        function applySobelFilter(data, sobelData, width, height) {
+            // Sobel边缘检测核
+            var sobelKernelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+            var sobelKernelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+            for (var y = 1; y < height - 1; y++) {
+                for (var x = 1; x < width - 1; x++) {
+                    var sumX = 0;
+                    var sumY = 0;
+                    // 计算Sobel值
+                    for (var ky = 0; ky < 3; ky++) {
+                        for (var kx = 0; kx < 3; kx++) {
+                            var pixelX = (x + kx - 1) * 4;
+                            var pixelY = (y + ky - 1) * 4;
+                            var weightX = sobelKernelX[ky * 3 + kx];
+                            var weightY = sobelKernelY[ky * 3 + kx];
+
+                            sumX += data[pixelY * width + pixelX] * weightX;
+                            sumY += data[pixelY * width + pixelX] * weightY;
+                        }
+                    }
+
+                    var pixel = (y * width + x) * 4;
+                    var magnitude = Math.sqrt(sumX * sumX + sumY * sumY);
+
+                    sobelData[pixel] = magnitude;
+                    sobelData[pixel + 1] = magnitude;
+                    sobelData[pixel + 2] = magnitude;
+                }
+            }
+        }
+        function showDownloadButton() {
+            var downloadButton = document.getElementById('downloadButton');
+            downloadButton.style.display = 'block';
+        }
+        function downloadImage() {
+            var canvas = document.getElementById('edgeCanvas');
+            var link = document.createElement('a');
+            link.download = 'image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
