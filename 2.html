@@ -3,124 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>颜色RGB分离</title>
+  <title>图像高斯模糊</title>
   <style>
     body {
+      font-weight: bold;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      margin-bottom: 20px;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
       font-weight: bold;
+      background-color:#252525;
     }
-
-    button {
-      margin-top: 10px;
-      margin-bottom: 10px;
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
     div {
-      margin-top: 5px;
+      width: 500px;
+      background-color:rgb(255, 255, 255);
+      border-radius: 3px;
+      text-align: center;
+      padding: 25px 0px;
+    }
+    canvas {
+      border: 2px solid #000;
+    }
+    img {
+      max-width: 100%;
+      max-height: 300px;
+      margin-top: 15px; 
+      margin-bottom: 15px;
+    }
+    button {
+      margin-top: 15px; 
+      border-radius: 8px; 
+      background-color: rgb(45, 187, 156); 
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer; /* 鼠标指针样式为手型 */
+      color:#fff;
+      font-size: 16px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-
-<input type="file" id="imageInput" accept="image/*">
-<div>
   <div>
-    <label>
-      <input type="checkbox" id="redCheckbox"> 去除红色分量
-    </label>
+  <input type="file" id="imageInput" accept="image/*">
+  <br>
+  <img id="previewImage">
+  <br>
+  <label for="blurRange">模糊程度: <span id="blurValueDisplay">0</span></label>
+  <input type="range" id="blurRange" min="0" max="20" step="1" value="0" oninput="updateBlur()">
+  <br>
+  <button onclick="downloadImage()">下载</button>
   </div>
-  <div>
-    <label>
-      <input type="checkbox" id="greenCheckbox"> 去除绿色分量
-    </label>
-  </div>
-  <div>
-    <label>
-      <input type="checkbox" id="blueCheckbox"> 去除蓝色分量
-    </label>
-  </div>
-</div>
-<button onclick="processImage()">勾选确认</button>
-<button onclick="downloadImage()">下载图片</button>
-<canvas id="canvas" style="max-width: 100%;"></canvas>
+  <script>
+    let inputImage, previewImage, blurRangeValue = 0;
 
-<script>
-function processImage() {
-  const input = document.getElementById('imageInput');
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+    document.getElementById('imageInput').addEventListener('change', handleImage);
+    document.getElementById('blurRange').addEventListener('input', updateBlur);
 
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-      const img = new Image();
-
-      img.onload = function () {
-        const scaleFactor = 500 / img.width;
-        canvas.width = 500;
-        canvas.height = img.height * scaleFactor;
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        manipulateImage(imageData);
-        ctx.putImageData(imageData, 0, 0);
-        document.body.appendChild(canvas);
-      };
-
-      img.src = e.target.result;
-    };
-
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-function manipulateImage(imageData) {
-  const data = imageData.data;
-  const redCheckbox = document.getElementById('redCheckbox');
-  const greenCheckbox = document.getElementById('greenCheckbox');
-  const blueCheckbox = document.getElementById('blueCheckbox');
-
-  for (let i = 0; i < data.length; i += 4) {
-    if (redCheckbox.checked) {
-      data[i] = 0;
+    function handleImage(e) {
+      inputImage = e.target.files[0];
+      previewImage = document.getElementById('previewImage');
+      previewImage.src = URL.createObjectURL(inputImage);
     }
-    if (greenCheckbox.checked) {
-      data[i + 1] = 0;
-    }
-    if (blueCheckbox.checked) {
-      data[i + 2] = 0;
-    }
-  }
-}
 
-function downloadImage() {
-  const canvas = document.getElementById('canvas');
-  const url = canvas.toDataURL("image/png");
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'processed_image.png';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-</script>
+    function updateBlur() {
+      blurRangeValue = document.getElementById('blurRange').value;
+      document.getElementById('previewImage').style.filter = `blur(${blurRangeValue}px)`;
+      document.getElementById('blurValueDisplay').textContent = blurRangeValue;
+    }
 
+    function downloadImage() {
+      if (blurRangeValue === '0' || blurRangeValue === 0) {
+        alert('请先选择要对图像处理的模糊程度');
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = previewImage.width;
+      canvas.height = previewImage.height;
+      ctx.filter = `blur(${blurRangeValue}px)`;
+      ctx.drawImage(previewImage, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL("image/png");
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = '模糊.png';
+      a.click();
+    }
+  </script>
 </body>
 </html>
