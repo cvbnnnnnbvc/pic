@@ -12,7 +12,7 @@
             align-items: center;
             height: 100vh;
             background-color: rgb(47, 47, 47);
-            color: #ffffff;
+            color: rgb(47, 47, 47);
         }
         #container {
             display: flex;
@@ -60,12 +60,39 @@
             cursor: pointer;
             color: #ffffff;
         }
+        #clearAllButton {
+            background-color: rgb(234, 234, 234);
+            border: 1px solid rgb(83, 83, 83);
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            color: rgb(83, 83, 83);
+        }
         #reduce{
             margin-left: 15px;
         }
         #Increase, #reduce {
             font-weight: bold;
             font-size: 15px;
+            border: 2px solid rgb(181, 181, 181);
+            color: rgb(101, 101, 101);
+            border-radius: 5px;
+        }
+        #imageInput::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+        #imageInput::before {
+            content: '选择文件';
+            color: white;
+            display: inline-block;
+            background: #2b658c;
+            padding: 4px 8px;
+            border: 1px solid #2b658c;
+            border-radius: 3px;
+            cursor: pointer;
+            outline: none;
+            white-space: nowrap;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -88,6 +115,7 @@
             <label for="eraserTool">橡皮擦</label>
             <br>
             <button id="undoButton">撤销</button>
+            <button id="clearAllButton">清空</button>
             <button id="downloadButton">下载图像</button>
         </div>
     </div>
@@ -155,36 +183,36 @@
                 }
             }
             function handleImageUpload(e) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function () {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            undoStack = [];
-            const aspectRatio = img.width / img.height;
-            const newHeight = canvas.width / aspectRatio;
-            const newWidth = canvas.height * aspectRatio;
-            const maxWidthOrHeight = Math.max(canvas.width, canvas.height);
-            const finalWidth = maxWidthOrHeight;
-            const finalHeight = maxWidthOrHeight / aspectRatio;
-            if (aspectRatio > 1) {
-                const x = (canvas.width - finalWidth) / 2;
-                const y = (canvas.height - finalHeight) / 2;
-                context.drawImage(img, x, y, finalWidth, finalHeight);
-            } else {
-                const maxHeight = Math.min(canvas.height, newHeight);
-                const finalWidthForPortrait = maxHeight * aspectRatio;
-                const xForPortrait = (canvas.width - finalWidthForPortrait) / 2;
-                context.drawImage(img, xForPortrait, 0, finalWidthForPortrait, maxHeight);
-            }
-
-            saveState(); 
-        };
-    };
-    reader.readAsDataURL(e.target.files[0]);
-}
-
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function () {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    undoStack = [];
+                    context.globalCompositeOperation = "source-over"; 
+                    const aspectRatio = img.width / img.height;
+                    const newHeight = canvas.width / aspectRatio;
+                    const newWidth = canvas.height * aspectRatio;
+                    const maxWidthOrHeight = Math.max(canvas.width, canvas.height);
+                    const finalWidth = maxWidthOrHeight;
+                    const finalHeight = maxWidthOrHeight / aspectRatio;
+                    if (aspectRatio > 1) {
+                        const x = (canvas.width - finalWidth) / 2;
+                        const y = (canvas.height - finalHeight) / 2;
+                        context.drawImage(img, x, y, finalWidth, finalHeight);
+                    } else {
+                        const maxHeight = Math.min(canvas.height, newHeight);
+                        const finalWidthForPortrait = maxHeight * aspectRatio;
+                        const xForPortrait = (canvas.width - finalWidthForPortrait) / 2;
+                        context.drawImage(img, xForPortrait, 0, finalWidthForPortrait, maxHeight);
+                    }
+                    saveState(); 
+                };
+            };
+            reader.readAsDataURL(e.target.files[0]);
+            document.getElementById("imageInput").value = "";
+        }
             function downloadImage() {
                 const dataUrl = canvas.toDataURL("image/png");
                 const link = document.createElement("a");
@@ -209,6 +237,13 @@
             canvas.addEventListener("mouseup", endPosition);
             canvas.addEventListener("mousemove", draw);
             saveState(); 
+
+            const clearAllButton = document.getElementById("clearAllButton");
+            function clearAll() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                undoStack = [];
+            }
+            clearAllButton.addEventListener("click", clearAll);
         });
     </script>
 </body>
