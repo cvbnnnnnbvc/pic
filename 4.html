@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>画板</title>
+    <title>图像编辑绘制</title>
     <style>
         body {
             margin: 0;
@@ -20,8 +20,10 @@
             align-items: center;
         }
         #myCanvas {
-            background-color:rgb(255, 255, 255);
-            width: 500px;
+            background-color:rgb(179, 179, 179);
+            width: 400px;
+            height: 400px;
+            object-fit: cover;
         }
         #box {
             background-color: rgb(255, 255, 255);
@@ -32,6 +34,7 @@
         }
         #brushSizeValue {
             margin-left: 60%;
+            color: #8f8f8f;
         }
         canvas {
             border: 1px solid #000;
@@ -39,7 +42,7 @@
         input {
             margin: 5px;
         }
-        button {
+        #downloadButton {
             background-color: rgb(78, 170, 165);
             border: 1px solid rgb(78, 170, 165);
             padding: 4px 8px;
@@ -47,20 +50,37 @@
             cursor: pointer;
             color: #ffffff;
             margin-top: 10px;
-            margin-right: 25px;
+            margin-left: 25px;
+        }
+        #undoButton {
+            background-color: rgb(83, 83, 83);
+            border: 1px solid rgb(83, 83, 83);
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #ffffff;
+        }
+        #reduce{
+            margin-left: 15px;
+        }
+        #Increase, #reduce {
+            font-weight: bold;
+            font-size: 15px;
         }
     </style>
 </head>
 <body>
     <div id="container">
         <input type="file" id="imageInput" accept="image/*">
-        <canvas id="myCanvas" width="500" height="500"></canvas>
+        <canvas id="myCanvas" width="400" height="400"></canvas>
         <div id="box">
             <label for="colorPicker">画笔颜色:</label>
             <input type="color" id="colorPicker" value="#000000">
             <br>
             <label for="brushSize">画笔大小:</label>
-            <input type="range" id="brushSize" min="1" max="20" value="5">
+            <button onclick="decreaseBrushSize()" id="reduce">-</button>
+            <input type="range" id="brushSize" min="1" max="80" value="5">
+            <button onclick="increaseBrushSize()" id="Increase">+</button>
             <div id="brushSizeValue">5px</div>
             <input type="radio" name="tool" id="brushTool" checked>
             <label for="brushTool">画笔</label>
@@ -72,6 +92,18 @@
         </div>
     </div>
     <script>
+        function decreaseBrushSize() {
+            if (parseInt(brushSize.value) > brushSize.min) {
+                brushSize.value = parseInt(brushSize.value) - 1;
+                brushSize.dispatchEvent(new Event('input'));
+            }
+        }
+        function increaseBrushSize() {
+            if (parseInt(brushSize.value) < brushSize.max) {
+                brushSize.value = parseInt(brushSize.value) + 1;
+                brushSize.dispatchEvent(new Event('input')); 
+            }
+        }
         document.addEventListener("DOMContentLoaded", function () {
             const canvas = document.getElementById("myCanvas");
             const context = canvas.getContext("2d", { willReadFrequently: true });
@@ -123,22 +155,36 @@
                 }
             }
             function handleImageUpload(e) {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = function () {
-                        context.clearRect(0, 0, canvas.width, canvas.height);
-                        undoStack = [];
-                        const aspectRatio = img.width / img.height;
-                        const newHeight = canvas.width / aspectRatio;
-                        canvas.height = newHeight;
-                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        saveState(); 
-                    };
-                };
-                reader.readAsDataURL(e.target.files[0]);
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function () {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            undoStack = [];
+            const aspectRatio = img.width / img.height;
+            const newHeight = canvas.width / aspectRatio;
+            const newWidth = canvas.height * aspectRatio;
+            const maxWidthOrHeight = Math.max(canvas.width, canvas.height);
+            const finalWidth = maxWidthOrHeight;
+            const finalHeight = maxWidthOrHeight / aspectRatio;
+            if (aspectRatio > 1) {
+                const x = (canvas.width - finalWidth) / 2;
+                const y = (canvas.height - finalHeight) / 2;
+                context.drawImage(img, x, y, finalWidth, finalHeight);
+            } else {
+                const maxHeight = Math.min(canvas.height, newHeight);
+                const finalWidthForPortrait = maxHeight * aspectRatio;
+                const xForPortrait = (canvas.width - finalWidthForPortrait) / 2;
+                context.drawImage(img, xForPortrait, 0, finalWidthForPortrait, maxHeight);
             }
+
+            saveState(); 
+        };
+    };
+    reader.readAsDataURL(e.target.files[0]);
+}
+
             function downloadImage() {
                 const dataUrl = canvas.toDataURL("image/png");
                 const link = document.createElement("a");
