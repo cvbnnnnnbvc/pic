@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画板</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: rgb(47, 47, 47);
+            color: #ffffff;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #myCanvas {
+            background-color:rgb(255, 255, 255);
+        }
+        #box {
+            background-color: rgb(255, 255, 255);
+            margin-top: 10px; 
+            border-radius: 3px;
+            padding: 10px 20px;
+            color: #000;
+        }
+        #brushSizeValue {
+            margin-left: 60%;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+        input {
+            margin: 5px;
+        }
+        button {
+            background-color: rgb(78, 170, 165);
+            border: 1px solid rgb(78, 170, 165);
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #ffffff;
+            margin-top: 10px;
+            margin-right: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <input type="file" id="imageInput" accept="image/*">
+        <canvas id="myCanvas" width="500" height="500"></canvas>
+        <div id="box">
+            <label for="colorPicker">颜色:</label>
+            <input type="color" id="colorPicker" value="#000000">
+            <br>
+            <label for="brushSize">画笔大小:</label>
+            <input type="range" id="brushSize" min="1" max="20" value="5">
+            <div id="brushSizeValue">5px</div>
+            <input type="radio" name="tool" id="brushTool" checked>
+            <label for="brushTool">画笔</label>
+            <input type="radio" name="tool" id="eraserTool">
+            <label for="eraserTool">橡皮擦</label>
+            <br>
+            <button id="undoButton">撤销</button>
+            <button id="downloadButton">下载图像</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const canvas = document.getElementById("myCanvas");
+            const context = canvas.getContext("2d", { willReadFrequently: true });
+            const colorPicker = document.getElementById("colorPicker");
+            const brushSize = document.getElementById("brushSize");
+            const brushSizeValue = document.getElementById("brushSizeValue");
+            const undoButton = document.getElementById("undoButton");
+            const downloadButton = document.getElementById("downloadButton");
+            const brushTool = document.getElementById("brushTool");
+            const eraserTool = document.getElementById("eraserTool");
+            const imageInput = document.getElementById("imageInput");
+            let painting = false;
+            let erasing = false;
+            let undoStack = [];
+            function startPosition(e) {
+                painting = true;
+                draw(e);
+            }
+            function endPosition() {
+                painting = false;
+                context.beginPath();
+                saveState();
+            }
+            function draw(e) {
+                if (!painting) return;
+                context.lineWidth = brushSize.value;
+                context.lineCap = "round";
+                if (erasing) {
+                    context.globalCompositeOperation = "destination-out";
+                } else {
+                    context.globalCompositeOperation = "source-over";
+                    context.strokeStyle = colorPicker.value;
+                }
+                context.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+                context.stroke();
+                context.beginPath();
+                context.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+            }
+            function saveState() {
+                undoStack.push(context.getImageData(0, 0, canvas.width, canvas.height));
+            }
+            function undo() {
+                if (undoStack.length > 1) {
+                    undoStack.pop();
+                    context.putImageData(undoStack[undoStack.length - 1], 0, 0);
+                } else {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    undoStack = [];
+                }
+            }
+            function handleImageUpload(e) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function () {
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                        undoStack = [];
+                        const aspectRatio = img.width / img.height;
+                        const newHeight = canvas.width / aspectRatio;
+                        canvas.height = newHeight;
+                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        saveState(); 
+                    };
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+            function downloadImage() {
+                const dataUrl = canvas.toDataURL("image/png");
+                const link = document.createElement("a");
+                link.href = dataUrl;
+                link.download = "canvas_image.png";
+                link.click();
+            }
+            function toggleEraser() {
+                erasing = !erasing;
+            }
+            brushSize.addEventListener("input", function () {
+                brushSizeValue.textContent = `${brushSize.value}px`;
+            });
+            undoButton.addEventListener("click", undo);
+            downloadButton.addEventListener("click", downloadImage);
+            brushTool.addEventListener("change", function () {
+                erasing = false;
+            });
+            eraserTool.addEventListener("change", toggleEraser);
+            imageInput.addEventListener("change", handleImageUpload);
+            canvas.addEventListener("mousedown", startPosition);
+            canvas.addEventListener("mouseup", endPosition);
+            canvas.addEventListener("mousemove", draw);
+            saveState(); 
+        });
+    </script>
+</body>
+</html>
