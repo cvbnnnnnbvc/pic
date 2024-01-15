@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图像编辑绘制</title>
+    <title>图像编辑与绘制</title>
     <style>
         body {
             margin: 0;
@@ -126,12 +126,14 @@
                 brushSize.dispatchEvent(new Event('input'));
             }
         }
+    
         function increaseBrushSize() {
             if (parseInt(brushSize.value) < brushSize.max) {
                 brushSize.value = parseInt(brushSize.value) + 1;
-                brushSize.dispatchEvent(new Event('input')); 
+                brushSize.dispatchEvent(new Event('input'));
             }
         }
+    
         document.addEventListener("DOMContentLoaded", function () {
             const canvas = document.getElementById("myCanvas");
             const context = canvas.getContext("2d", { willReadFrequently: true });
@@ -146,16 +148,31 @@
             let painting = false;
             let erasing = false;
             let undoStack = [];
+    
             function startPosition(e) {
                 painting = true;
-                draw(e);
+                if (e.type === "touchstart") {
+                    draw(e.touches[0]);
+                } else {
+                    draw(e);
+                }
             }
+    
             function endPosition() {
                 painting = false;
                 context.beginPath();
                 saveState();
             }
-            function draw(e) {
+    
+            function handleTouchMove(e) {
+                e.preventDefault();
+                const touches = e.changedTouches;
+                for (let i = 0; i < touches.length; i++) {
+                    draw(touches[i]);
+                }
+            }
+    
+            function draw(touch) {
                 if (!painting) return;
                 context.lineWidth = brushSize.value;
                 context.lineCap = "round";
@@ -165,14 +182,16 @@
                     context.globalCompositeOperation = "source-over";
                     context.strokeStyle = colorPicker.value;
                 }
-                context.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+                context.lineTo(touch.clientX - canvas.offsetLeft, touch.clientY - canvas.offsetTop);
                 context.stroke();
                 context.beginPath();
-                context.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+                context.moveTo(touch.clientX - canvas.offsetLeft, touch.clientY - canvas.offsetTop);
             }
+    
             function saveState() {
                 undoStack.push(context.getImageData(0, 0, canvas.width, canvas.height));
             }
+    
             function undo() {
                 if (undoStack.length > 1) {
                     undoStack.pop();
@@ -182,37 +201,39 @@
                     undoStack = [];
                 }
             }
+    
             function handleImageUpload(e) {
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = function () {
-                    context.clearRect(0, 0, canvas.width, canvas.height);
-                    undoStack = [];
-                    context.globalCompositeOperation = "source-over"; 
-                    const aspectRatio = img.width / img.height;
-                    const newHeight = canvas.width / aspectRatio;
-                    const newWidth = canvas.height * aspectRatio;
-                    const maxWidthOrHeight = Math.max(canvas.width, canvas.height);
-                    const finalWidth = maxWidthOrHeight;
-                    const finalHeight = maxWidthOrHeight / aspectRatio;
-                    if (aspectRatio > 1) {
-                        const x = (canvas.width - finalWidth) / 2;
-                        const y = (canvas.height - finalHeight) / 2;
-                        context.drawImage(img, x, y, finalWidth, finalHeight);
-                    } else {
-                        const maxHeight = Math.min(canvas.height, newHeight);
-                        const finalWidthForPortrait = maxHeight * aspectRatio;
-                        const xForPortrait = (canvas.width - finalWidthForPortrait) / 2;
-                        context.drawImage(img, xForPortrait, 0, finalWidthForPortrait, maxHeight);
-                    }
-                    saveState(); 
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function () {
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                        undoStack = [];
+                        context.globalCompositeOperation = "source-over";
+                        const aspectRatio = img.width / img.height;
+                        const newHeight = canvas.width / aspectRatio;
+                        const newWidth = canvas.height * aspectRatio;
+                        const maxWidthOrHeight = Math.max(canvas.width, canvas.height);
+                        const finalWidth = maxWidthOrHeight;
+                        const finalHeight = maxWidthOrHeight / aspectRatio;
+                        if (aspectRatio > 1) {
+                            const x = (canvas.width - finalWidth) / 2;
+                            const y = (canvas.height - finalHeight) / 2;
+                            context.drawImage(img, x, y, finalWidth, finalHeight);
+                        } else {
+                            const maxHeight = Math.min(canvas.height, newHeight);
+                            const finalWidthForPortrait = maxHeight * aspectRatio;
+                            const xForPortrait = (canvas.width - finalWidthForPortrait) / 2;
+                            context.drawImage(img, xForPortrait, 0, finalWidthForPortrait, maxHeight);
+                        }
+                        saveState();
+                    };
                 };
-            };
-            reader.readAsDataURL(e.target.files[0]);
-            document.getElementById("imageInput").value = "";
-        }
+                reader.readAsDataURL(e.target.files[0]);
+                document.getElementById("imageInput").value = "";
+            }
+    
             function downloadImage() {
                 const dataUrl = canvas.toDataURL("image/png");
                 const link = document.createElement("a");
@@ -220,12 +241,15 @@
                 link.download = "canvas_image.png";
                 link.click();
             }
+    
             function toggleEraser() {
                 erasing = !erasing;
             }
+    
             brushSize.addEventListener("input", function () {
                 brushSizeValue.textContent = `${brushSize.value}px`;
             });
+    
             undoButton.addEventListener("click", undo);
             downloadButton.addEventListener("click", downloadImage);
             brushTool.addEventListener("change", function () {
@@ -233,11 +257,16 @@
             });
             eraserTool.addEventListener("change", toggleEraser);
             imageInput.addEventListener("change", handleImageUpload);
+    
             canvas.addEventListener("mousedown", startPosition);
+            canvas.addEventListener("touchstart", startPosition);
             canvas.addEventListener("mouseup", endPosition);
+            canvas.addEventListener("touchend", endPosition);
             canvas.addEventListener("mousemove", draw);
-            saveState(); 
-
+            canvas.addEventListener("touchmove", handleTouchMove);
+    
+            saveState();
+    
             const clearAllButton = document.getElementById("clearAllButton");
             function clearAll() {
                 context.clearRect(0, 0, canvas.width, canvas.height);
@@ -246,5 +275,6 @@
             clearAllButton.addEventListener("click", clearAll);
         });
     </script>
+    
 </body>
 </html>
