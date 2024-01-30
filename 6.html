@@ -43,15 +43,13 @@
         }
 
         #asciiOutput {
-            font-size: 8px;
+            font-size: 10px;
             white-space: pre-wrap;
             margin-top: 10px; /* 上移ASCII区域 */
             background-color: #000000;
             padding: 10px;
             display: inline-block;
             color: rgb(0, 255, 68); /* 将ASCII文本颜色设置为黑色 */
-            margin-left: 10px; /* 左边距10px */
-            margin-right: 10px; /* 右边距10px */
         }
 
         #outputCanvas {
@@ -94,8 +92,8 @@
                     // 将图片宽度调整为1000px，高度按比例缩放
                     const newWidth = 1000;
                     const scaleFactor = newWidth / img.width;
-                    canvas.width = newWidth * 2;
-                    canvas.height = img.height * scaleFactor;
+                    canvas.width = newWidth;
+                    canvas.height = img.height * scaleFactor / 2.25;
 
                     // 将图片绘制到画布上
                     ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
