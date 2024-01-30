@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图像水印</title>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: rgb(72, 72, 72);
+    }
+    #imageContainer {
+      text-align: center;
+      background-color: rgb(252, 252, 252); 
+      padding: 20px 40px;
+      border-radius: 10px;
+    }
+    #watermarkedImage {
+      margin-top: 20px; 
+      margin-bottom: 20px; 
+      max-width: 100%;
+    }
+    #downloadButton {
+      display: none;
+      background-color: blue; 
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      cursor: pointer;
+      border-radius: 10px; 
+      font-weight: bold; 
+    }
+  </style>
+</head>
+<body>
+  <div id="imageContainer">
+    <input type="file" id="fileInput" accept="image/*">
+    <br>
+    <img id="watermarkedImage">
+    <br>
+    <button id="downloadButton" style="display:none;">下载</button>
+  </div>
+
+  <script>
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          const originalImage = new Image();
+          originalImage.src = e.target.result;
+
+          originalImage.onload = function () {
+            const canvas = document.createElement('canvas');
+            canvas.width = 500;
+            canvas.height = (500 / originalImage.width) * originalImage.height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+
+            // 添加网格水印
+            const gapX = canvas.width * 0.02;
+            const gapY = canvas.height * 0.02;
+
+            // 保存当前状态
+            ctx.save();
+
+            ctx.strokeStyle = 'rgba(0, 255, 0, 1)';
+            ctx.lineWidth = 1;
+
+            // 水平线
+            for (let y = gapY; y < canvas.height; y += gapY * 2) {
+              ctx.beginPath();
+              ctx.moveTo(0, y);
+              ctx.lineTo(canvas.width, y);
+              ctx.stroke();
+            }
+
+            // 垂直线
+            for (let x = gapX; x < canvas.width; x += gapX * 2) {
+              ctx.beginPath();
+              ctx.moveTo(x, 0);
+              ctx.lineTo(x, canvas.height);
+              ctx.stroke();
+            }
+
+            // 恢复之前保存的状态
+            ctx.restore();
+
+            // 显示水印图像
+            const watermarkedImage = document.getElementById('watermarkedImage');
+            watermarkedImage.src = canvas.toDataURL('image/jpeg');
+
+            // 显示下载按钮
+            const downloadButton = document.getElementById('downloadButton');
+            downloadButton.style.display = 'block';
+            downloadButton.onclick = function () {
+              const a = document.createElement('a');
+              a.href = canvas.toDataURL('image/jpeg');
+              a.download = 'watermarked_image.jpg';
+              a.click();
+            };
+          };
+        };
+
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
+</body>
+</html>
