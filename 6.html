@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像添加文字水印</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: rgb(71, 71, 71);
+        }
+
+        #image-container {
+            text-align: left;
+            margin-top: 20px;
+            background-color: rgb(251, 251, 251);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        #uploaded-image {
+            max-width: 100%;
+            width: 500px;
+            margin: 0 auto;
+            cursor: crosshair; /* 设置鼠标样式为十字光标 */
+        }
+
+        #file-input-container {
+            margin-top: 10px;
+        }
+
+        .label {
+            margin-right: 10px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-top: 10px;
+        }
+
+        #opacity-input {
+            width: 200px;
+        }
+
+        .value-display {
+            margin-left: 10px;
+        }
+
+        #font-size-input,
+        #opacity-input {
+            width: 40px;
+        }
+
+        button, #download-link button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="image-container">
+        <div id="file-input-container">
+            <input type="file" id="file-input" accept="image/*" onchange="displayImage()">
+        </div>
+
+        <div>
+            <img id="uploaded-image" onclick="recordCoordinates(event)">
+            <div>
+                <label for="watermark-input">水印文字：</label>
+                <input type="text" id="watermark-input" placeholder="输入水印文字">
+            </div>            
+            <div class="input-container">
+                <label class="label" for="font-size-input">文字大小：</label>
+                <input type="number" id="font-size-input" min="1" value="20">
+            </div>
+            <div class="input-container">
+                <label class="label" for="text-color-input">文字颜色：</label>
+                <input type="color" id="text-color-input" value="#ffffff">
+            </div>
+            <div class="input-container">
+                <label class="label" for="opacity-input">不透明度：</label>
+                <input type="range" id="opacity-input" min="0" max="1" step="0.1" value="1" oninput="updateOpacityValue()">
+                <span class="value-display" id="opacity-value">1</span>
+            </div>
+            <div class="input-container">
+                <label class="label" for="coordinates-display">文字坐标：</label>
+                <span id="coordinates-display">(0, 0)</span>
+            </div>
+            <button onclick="addWatermark()">添加水印</button>
+            <a id="download-link" style="display: none;" download="watermarked_image.png"><button onclick="downloadImage()">下载图片</button></a>
+        </div>
+    </div>
+
+    <script>
+        var clickCoordinates = { x: 0, y: 0 }; // 记录点击坐标
+
+        function displayImage() {
+            var input = document.getElementById('file-input');
+            var uploadedImage = document.getElementById('uploaded-image');
+            var downloadLink = document.getElementById('download-link');
+
+            var file = input.files[0];
+            if (file) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    uploadedImage.src = e.target.result;
+                    downloadLink.style.display = 'none';
+                    // 清空之前记录的坐标
+                    clickCoordinates = { x: 0, y: 0 };
+                    document.getElementById('coordinates-display').textContent = `(0, 0)`;
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                uploadedImage.src = '';
+                downloadLink.style.display = 'none';
+            }
+        }
+
+        function recordCoordinates(event) {
+            var uploadedImage = document.getElementById('uploaded-image');
+            // 获取相对于图片的坐标
+            var rect = uploadedImage.getBoundingClientRect();
+            clickCoordinates.x = (event.clientX - rect.left) * (uploadedImage.naturalWidth / rect.width);
+            clickCoordinates.y = (event.clientY - rect.top) * (uploadedImage.naturalHeight / rect.height);
+            document.getElementById('coordinates-display').textContent = `(${clickCoordinates.x.toFixed(2)}, ${clickCoordinates.y.toFixed(2)})`;
+        }
+
+        function addWatermark() {
+            var uploadedImage = document.getElementById('uploaded-image');
+            var watermarkInput = document.getElementById('watermark-input').value;
+            var fontSizeInput = document.getElementById('font-size-input').value;
+            var textColorInput = document.getElementById('text-color-input').value;
+            var opacityInput = document.getElementById('opacity-input').value;
+
+            if (watermarkInput.trim() !== "") {
+                var canvas = document.createElement('canvas');
+                var context = canvas.getContext('2d');
+                canvas.width = uploadedImage.naturalWidth;
+                canvas.height = uploadedImage.naturalHeight;
+
+                context.drawImage(uploadedImage, 0, 0);
+
+                context.font = fontSizeInput + 'px Arial';
+                context.fillStyle = textColorInput;
+                context.globalAlpha = opacityInput;
+                context.fillText(watermarkInput, clickCoordinates.x, clickCoordinates.y);
+
+                context.globalAlpha = 1;
+
+                uploadedImage.src = canvas.toDataURL();
+                document.getElementById('download-link').style.display = 'block';
+            }
+        }
+
+        function downloadImage() {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            var uploadedImage = document.getElementById('uploaded-image');
+
+            canvas.width = uploadedImage.naturalWidth;
+            canvas.height = uploadedImage.naturalHeight;
+
+            context.drawImage(uploadedImage, 0, 0);
+
+            var downloadLink = document.getElementById('download-link');
+            downloadLink.href = canvas.toDataURL();
+        }
+
+        function updateOpacityValue() {
+            var opacityInput = document.getElementById('opacity-input');
+            var opacityValueDisplay = document.getElementById('opacity-value');
+            opacityValueDisplay.textContent = opacityInput.value;
+        }
+    </script>
+</body>
+</html>
