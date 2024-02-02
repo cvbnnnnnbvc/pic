@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图像文字水印</title>
+    <title>图像隐式文字水印</title>
+       <!-- 引入 Spectrum Color Picker 样式文件 -->
+       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
+       <!-- 引入 jQuery -->
+       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+       <!-- 引入 Spectrum Color Picker 脚本文件 -->
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
     <style>
         body {
             display: flex;
@@ -84,11 +90,21 @@
         .filter button {
             background-color: #445593;
         }
-        #coordinates-display {
+        #coordinates-display, #rgb-display {
             color: #6a6a6a;
         }
         #add {
             margin-bottom: 10px;
+        }
+        .rgb {
+            margin-top: 10px;
+        }
+        #color-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #606060; 
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -110,7 +126,7 @@
             </div>
             <div class="input-container">
                 <label class="label" for="text-color-input">文字颜色：</label>
-                <input type="color" id="text-color-input" value="#ffffff">
+                <input type="text" id="text-color-input" value="rgb(255, 0, 0)">
             </div>
             <div class="input-container">
                 <label class="label" for="opacity-input">不透明度：</label>
@@ -119,12 +135,18 @@
             </div>
             <div class="input-container">
                 <label class="label" for="coordinates-display">文字坐标：</label>
-                <span id="coordinates-display">(0, 0)</span>
+                <span id="coordinates-display">未选择</span>
+            </div>
+            <div class="input-container">
+                <label class="label" for="rgb-display">颜色值：</label>
+                <span id="rgb-display">未选择</span>
+                <div id="color-circle"></div> 
             </div>
             <button onclick="addWatermark()" id="add">添加水印</button>
             <div>图像颜色过滤：</div>
             <div class="filter">
-                <div>
+                保留色值：
+                <div class="rgb">
                     <label for="red">R:</label>
                     <input type="number" id="red" min="0" max="255" value="0">
                     
@@ -172,6 +194,20 @@
             var rect = uploadedImage.getBoundingClientRect();
             clickCoordinates.x = (event.clientX - rect.left) * (uploadedImage.naturalWidth / rect.width);
             clickCoordinates.y = (event.clientY - rect.top) * (uploadedImage.naturalHeight / rect.height);
+            // 获取点击位置的颜色值
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            canvas.width = 1;
+            canvas.height = 1;
+            context.drawImage(uploadedImage, clickCoordinates.x, clickCoordinates.y, 1, 1, 0, 0, 1, 1);
+            var pixelData = context.getImageData(0, 0, 1, 1).data;
+            // 显示 RGB 值
+            var rgbDisplay = document.getElementById('rgb-display');
+            rgbDisplay.textContent = `RGB: ${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]}`;
+              // 显示圆形颜色
+    var colorCircle = document.getElementById('color-circle');
+    colorCircle.style.backgroundColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
+
             document.getElementById('coordinates-display').textContent = `(${clickCoordinates.x.toFixed(2)}, ${clickCoordinates.y.toFixed(2)})`;
         }
 
@@ -260,7 +296,13 @@
             applyColorFilter(image);
         }
     }
-
+     // 使用 Spectrum Color Picker
+        $("#text-color-input").spectrum({
+            preferredFormat: "rgb",
+            showInput: true,
+            showPalette: true,
+            palette: [["rgb(255, 0, 0)", "rgb(0, 255, 0)", "rgb(0, 0, 255)"]],
+        });
     </script>
 </body>
 </html>
