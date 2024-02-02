@@ -13,13 +13,17 @@
             margin: 0;
             background-color: rgb(71, 71, 71);
         }
-
+        input {
+            margin-bottom: 10px;
+        }
         #image-container {
             text-align: left;
             margin-top: 20px;
             background-color: rgb(251, 251, 251);
             padding: 20px;
             border-radius: 10px;
+            overflow-y: auto; /* 或者 overflow-y: scroll; */
+            height: 450px; 
         }
 
         #uploaded-image {
@@ -60,6 +64,32 @@
         button, #download-link button {
             margin-top: 10px;
         }
+        button {
+            background-color: #4c95af;
+            color: white;
+            padding: 5px 10px; 
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .filter {
+            margin-top: 10px;
+            background-color: rgb(221, 221, 221);
+            padding-top: 20px; 
+            padding-bottom: 20px;
+            text-align: center;
+            border-radius: 5px;
+            color: #585858;
+        }
+        .filter button {
+            background-color: #445593;
+        }
+        #coordinates-display {
+            color: #6a6a6a;
+        }
+        #add {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -91,14 +121,27 @@
                 <label class="label" for="coordinates-display">文字坐标：</label>
                 <span id="coordinates-display">(0, 0)</span>
             </div>
-            <button onclick="addWatermark()">添加水印</button>
+            <button onclick="addWatermark()" id="add">添加水印</button>
+            <div>图像颜色过滤：</div>
+            <div class="filter">
+                <div>
+                    <label for="red">R:</label>
+                    <input type="number" id="red" min="0" max="255" value="0">
+                    
+                    <label for="green">G:</label>
+                    <input type="number" id="green" min="0" max="255" value="0">
+                    
+                    <label for="blue">B:</label>
+                    <input type="number" id="blue" min="0" max="255" value="0">
+                </div>
+                <button onclick="applyFilter()">过滤</button>
+            </div>
             <a id="download-link" style="display: none;" download="watermarked_image.png"><button onclick="downloadImage()">下载图片</button></a>
         </div>
     </div>
 
     <script>
         var clickCoordinates = { x: 0, y: 0 }; // 记录点击坐标
-
         function displayImage() {
             var input = document.getElementById('file-input');
             var uploadedImage = document.getElementById('uploaded-image');
@@ -178,6 +221,46 @@
             var opacityValueDisplay = document.getElementById('opacity-value');
             opacityValueDisplay.textContent = opacityInput.value;
         }
+
+         // 应用颜色过滤
+        function applyColorFilter(image) {
+            var redInput = document.getElementById('red').value;
+            var greenInput = document.getElementById('green').value;
+            var blueInput = document.getElementById('blue').value;
+
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+
+            canvas.width = image.width;
+            canvas.height = image.height;
+            context.drawImage(image, 0, 0, image.width, image.height);
+            var imageData = context.getImageData(0, 0, image.width, image.height);
+            var pixels = imageData.data;
+
+            for (var i = 0; i < pixels.length; i += 4) {
+                // 检查像素的RGB值是否与输入匹配
+                if (pixels[i] == redInput && pixels[i + 1] == greenInput && pixels[i + 2] == blueInput) {
+                    // 保留颜色
+                } else {
+                    // 变成黑色
+                    pixels[i] = 0;
+                    pixels[i + 1] = 0;
+                    pixels[i + 2] = 0;
+                }
+            }
+
+            // 更新图像
+            context.putImageData(imageData, 0, 0);
+            image.src = canvas.toDataURL();
+        }
+
+        function applyFilter() {
+        var image = document.querySelector('#uploaded-image');
+        if (image) {
+            applyColorFilter(image);
+        }
+    }
+
     </script>
 </body>
 </html>
