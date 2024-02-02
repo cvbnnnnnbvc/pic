@@ -3,44 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Picker</title>
+    <title>Custom Color Picker</title>
+
+    <!-- 引入 Spectrum Color Picker 样式文件 -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
+
+    <!-- 引入 jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- 引入 Spectrum Color Picker 脚本文件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 50px;
         }
-
-        input[type="color"] {
-            width: 50px;
-            height: 50px;
-        }
     </style>
 </head>
 <body>
-    <h1>Color Picker</h1>
-    <label for="colorPicker">Choose a color:</label>
-    <input type="color" id="colorPicker" value="#ff0000">
-
-    <p>Selected Color: <span id="selectedColor">#ff0000</span></p>
+    <h1>Custom Color Picker</h1>
+    <input type="text" id="colorPicker" value="#ff0000">
 
     <script>
-        // 获取颜色选择器元素
-        var colorPicker = document.getElementById('colorPicker');
-
-        // 获取显示选定颜色的元素
-        var selectedColor = document.getElementById('selectedColor');
-
-        // 添加事件监听器，当颜色选择器的值更改时触发
-        colorPicker.addEventListener('input', function() {
-            // 获取颜色选择器的当前值
-            var chosenColor = colorPicker.value;
-
-            // 将选定颜色的文本更新为所选颜色的值
-            selectedColor.textContent = chosenColor;
-
-            // 还可以执行其他操作，比如将颜色应用到其他元素
-            // document.body.style.backgroundColor = chosenColor;
+        // 使用 Spectrum Color Picker
+        $("#colorPicker").spectrum({
+            preferredFormat: "hex",
+            showInput: true,
+            showPalette: true,
+            palette: [["#ff0000", "#00ff00", "#0000ff"]],
         });
     </script>
 </body>
