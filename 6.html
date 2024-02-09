@@ -18,6 +18,7 @@
             height: 100vh;
             margin: 0;
             background-color: rgb(71, 71, 71);
+            color: #474747;
         }
         input {
             margin-bottom: 10px;
@@ -37,10 +38,6 @@
             width: 500px;
             margin: 0 auto;
             cursor: crosshair; /* 设置鼠标样式为十字光标 */
-        }
-
-        #file-input-container {
-            margin-top: 10px;
         }
 
         .label {
@@ -106,12 +103,17 @@
             border: 1px solid #606060; 
             margin-left: 10px;
         }
+        #uploadButton {
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #9b59b6, #3498db);
+        }
     </style>
 </head>
 <body>
     <div id="image-container">
         <div id="file-input-container">
-            <input type="file" id="file-input" accept="image/*" onchange="displayImage()">
+            <input type="file" id="file-input" accept="image/*" onchange="displayImage()" style="display: none;">
+            <button id="uploadButton">选择图片</button>
         </div>
 
         <div>
@@ -126,7 +128,7 @@
             </div>
             <div class="input-container">
                 <label class="label" for="text-color-input">文字颜色：</label>
-                <input type="text" id="text-color-input" value="rgb(255, 0, 0)">
+                <input type="text" id="text-color-input" value="rgb(0, 0, 255)">
             </div>
             <div class="input-container">
                 <label class="label" for="opacity-input">不透明度：</label>
@@ -163,6 +165,9 @@
     </div>
 
     <script>
+        uploadButton.addEventListener('click', function () {
+            document.getElementById('file-input').click();
+        });
         var clickCoordinates = { x: 0, y: 0 }; // 记录点击坐标
         function displayImage() {
             var input = document.getElementById('file-input');
@@ -204,9 +209,9 @@
             // 显示 RGB 值
             var rgbDisplay = document.getElementById('rgb-display');
             rgbDisplay.textContent = `RGB: ${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]}`;
-              // 显示圆形颜色
-    var colorCircle = document.getElementById('color-circle');
-    colorCircle.style.backgroundColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
+            // 显示圆形颜色
+            var colorCircle = document.getElementById('color-circle');
+            colorCircle.style.backgroundColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
 
             document.getElementById('coordinates-display').textContent = `(${clickCoordinates.x.toFixed(2)}, ${clickCoordinates.y.toFixed(2)})`;
         }
