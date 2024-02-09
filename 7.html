@@ -8,10 +8,23 @@
         body {
             font-family: 'Courier New', monospace;
             text-align: center;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             background-color: rgb(48, 160, 152);
             color: white;
             user-select: none; /* 禁止文本选择 */
+        }
+
+        #box {
+            width: 500px;
+            background-color: rgb(12, 12, 12);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
         h1 {
@@ -47,9 +60,6 @@
             overflow-y: auto; /* 添加垂直滚动条 */
             max-height: 500px; /* 设置最大高度 */
             margin-top: 10px; /* 上移ASCII区域 */
-            overflow: hidden; /* 添加溢出隐藏 */
-            white-space: nowrap; /* 防止文本换行 */
-            overflow-x: auto; /* 添加水平滚动条 */
             user-select: text;
         }
 
@@ -87,20 +97,22 @@
     </style>
 </head>
 <body>
-    <h1>图像ASCII字符</h1>
+    <div id="box">
+        <h1>图像ASCII字符</h1>
     
-    <input type="file" id="imageInput" accept="image/*" style="display: none;">
-    <button id="uploadButton">选择图片</button>
-    <br>
-    <span id="fileLabel"></span>
-    <br><br>
-    <div id="asciiOutputWrapper">
-        <pre id="asciiOutput"></pre>
+        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        <button id="uploadButton">选择图片</button>
+        <br>
+        <span id="fileLabel"></span>
+        <br><br>
+        <div id="asciiOutputWrapper">
+            <pre id="asciiOutput"></pre>
+        </div>
+    
+        <button id="downloadTxtButton" class="action-button">下载ASCII文本</button>
+        <button id="downloadImageBtn" class="action-button">下载ASCII图像</button>
     </div>
-
-    <button id="downloadTxtButton" class="action-button">下载ASCII文本</button>
-    <button id="downloadImageBtn" class="action-button">下载ASCII图像</button>
-
+ 
     <script>
         const uploadButton = document.getElementById('uploadButton');
         const downloadTxtButton = document.getElementById('downloadTxtButton');
@@ -250,4 +262,3 @@
     </script>
 </body>
 </html>
-
