@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图像转ASCII字符显示</title>
+    <title>图像ASCII字符</title>
     <style>
         body {
             font-family: 'Courier New', monospace;
@@ -44,10 +44,11 @@
         }
 
         #asciiOutputWrapper {
-            overflow-x: auto; /* 添加水平滚动条 */
             overflow-y: auto; /* 添加垂直滚动条 */
             max-height: 500px; /* 设置最大高度 */
             margin-top: 10px; /* 上移ASCII区域 */
+            white-space: nowrap; /* 防止文本换行 */
+            overflow-x: auto; /* 添加水平滚动条 */
         }
 
         #asciiOutput {
@@ -77,14 +78,10 @@
         .action-button:hover {
             background: linear-gradient(to right, #9b59b6, #3498db);
         }
-
-        #downloadTxtButton, #downloadImageBtn {
-            background: #133089;
-        }
     </style>
 </head>
 <body>
-    <h1>图像转ASCII字符显示</h1>
+    <h1>图像ASCII字符</h1>
     
     <input type="file" id="imageInput" accept="image/*" style="display: none;">
     <button id="uploadButton">选择图片</button>
@@ -155,6 +152,9 @@
                     // 显示按钮
                     downloadTxtButton.style.display = 'inline-block';
                     downloadImageBtn.style.display = 'inline-block';
+
+                    // 判断是否需要启用水平滚动条
+                    checkHorizontalScrollbar();
                 };
             };
 
@@ -183,6 +183,10 @@
             canvas.width = asciiOutput.clientWidth;
             canvas.height = asciiOutput.clientHeight;
 
+            // 填充黑色背景
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             // 将ASCII文本绘制到画布上
             ctx.font = `${fontSize}px Courier New`;
             ctx.fillStyle = 'rgb(0, 255, 68)';
@@ -199,6 +203,7 @@
             a.click();
             document.body.removeChild(a);
         });
+
 
         function pixelateAndGetAscii(context, blockSize) {
             const imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
@@ -238,6 +243,17 @@
             }
 
             return asciiArt;
+        }
+
+        function checkHorizontalScrollbar() {
+            const asciiOutput = document.getElementById('asciiOutput');
+            const asciiOutputWrapper = document.getElementById('asciiOutputWrapper');
+            const hasHorizontalScrollbar = asciiOutput.scrollWidth > asciiOutputWrapper.clientWidth;
+            if (hasHorizontalScrollbar) {
+                asciiOutputWrapper.style.overflowX = 'scroll';
+            } else {
+                asciiOutputWrapper.style.overflowX = 'auto';
+            }
         }
     </script>
 </body>
