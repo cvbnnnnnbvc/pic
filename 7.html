@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图像ASCII字符</title>
+    <title>图像ASCII字符显示</title>
     <style>
         body {
             font-family: 'Courier New', monospace;
@@ -47,8 +47,10 @@
             overflow-y: auto; /* 添加垂直滚动条 */
             max-height: 500px; /* 设置最大高度 */
             margin-top: 10px; /* 上移ASCII区域 */
+            overflow: hidden; /* 添加溢出隐藏 */
             white-space: nowrap; /* 防止文本换行 */
             overflow-x: auto; /* 添加水平滚动条 */
+            user-select: text;
         }
 
         #asciiOutput {
@@ -77,6 +79,10 @@
 
         .action-button:hover {
             background: linear-gradient(to right, #9b59b6, #3498db);
+        }
+
+        #downloadTxtButton, #downloadImageBtn {
+            background: #333475;
         }
     </style>
 </head>
@@ -121,7 +127,7 @@
                     // 将图片宽度调整为500px，高度按比例缩放
                     const newWidth = 800;
                     const scaleFactor = newWidth / img.width;
-                    canvas.width = newWidth * 2.5;
+                    canvas.width = newWidth * 2.25;
                     canvas.height = img.height * scaleFactor;
 
                     // 将图片绘制到画布上
@@ -152,9 +158,6 @@
                     // 显示按钮
                     downloadTxtButton.style.display = 'inline-block';
                     downloadImageBtn.style.display = 'inline-block';
-
-                    // 判断是否需要启用水平滚动条
-                    checkHorizontalScrollbar();
                 };
             };
 
@@ -244,17 +247,7 @@
 
             return asciiArt;
         }
-
-        function checkHorizontalScrollbar() {
-            const asciiOutput = document.getElementById('asciiOutput');
-            const asciiOutputWrapper = document.getElementById('asciiOutputWrapper');
-            const hasHorizontalScrollbar = asciiOutput.scrollWidth > asciiOutputWrapper.clientWidth;
-            if (hasHorizontalScrollbar) {
-                asciiOutputWrapper.style.overflowX = 'scroll';
-            } else {
-                asciiOutputWrapper.style.overflowX = 'auto';
-            }
-        }
     </script>
 </body>
 </html>
+
