@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图像编辑与绘制</title>
+      <!-- 引入 Spectrum Color Picker 样式文件 -->
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
+      <!-- 引入 jQuery -->
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <!-- 引入 Spectrum Color Picker 脚本文件 -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -102,7 +108,7 @@
         <canvas id="myCanvas" width="400" height="400"></canvas>
         <div id="box">
             <label for="colorPicker">画笔颜色:</label>
-            <input type="color" id="colorPicker" value="#000000">
+            <input type="text" id="colorPicker" value="rgb(0, 0, 255)">
             <br>
             <label for="brushSize">画笔大小:</label>
             <button onclick="decreaseBrushSize()" id="reduce">-</button>
@@ -274,7 +280,13 @@
             }
             clearAllButton.addEventListener("click", clearAll);
         });
+         // 使用 Spectrum Color Picker
+         $("#colorPicker").spectrum({
+            preferredFormat: "rgb",
+            showInput: true,
+            showPalette: true,
+            palette: [["rgb(255, 0, 0)", "rgb(0, 255, 0)", "rgb(0, 0, 255)"]],
+        });
     </script>
-    
 </body>
 </html>
