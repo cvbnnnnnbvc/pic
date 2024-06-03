@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIF制作</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <style>
+        body {
+            color: #3d3d3d;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            display: none; /* 隐藏文件选择框 */
+        }
+        #preview {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .preview-item {
+            filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.7));
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+            text-align: center;
+            position: relative;
+        }
+        .preview-item img {
+            display: block;
+            max-width: 100px; 
+            margin: 0 auto;
+        }
+        .preview-item button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: transparent; 
+            border: none; 
+            cursor: pointer; 
+        }
+        .preview-item button svg {
+            width: 24px;
+            height: 24px;
+            stroke: rgb(255, 255, 255); /* 设置图标颜色 */
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.7)); 
+        }
+        #gif-container img {
+            max-width: 100%;
+        }
+        #addNewImage {
+            background-color: transparent;
+            border: none; 
+            cursor: pointer;
+        }
+        #addNewImage svg {
+            width: 100px;
+            height: 100px;
+            stroke: #d1f2ff; 
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.7)); 
+        }
+        button {
+            padding: 8px 10px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 13px;
+            background-color: #4c77af;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 10px; 
+            font-family: 'ZCOOL KuaiLe', sans-serif;
+            font-size: 16px;
+        }
+        #createGif:hover {
+            background-color:#215ba7;
+        }
+        input {
+            width: 45px; 
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            font-size: 13px;
+            padding: 5px;
+            font-family: 'ZCOOL KuaiLe', sans-serif;
+        }
+        input:focus {
+            border-color: #66afe9;
+            outline: 0;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
+        }
+    </style>
+</head>
+<body style="font-family: 'ZCOOL KuaiLe', sans-serif;">
+    <h1>图片制作 GIF</h1>
+    <input type="file" id="imageUpload" multiple accept="image/*">
+    <input type="file" id="newImageUpload" multiple accept="image/*">
+    <div>
+        <label for="frameInterval">帧时间(毫秒): </label>
+        <input type="number" id="frameInterval" value="100">
+    </div>
+    <h3>尽量使图片的尺寸一致，否则以第一张图片尺寸为基准</h3>
+    <button id="createGif">合成GIF</button>
+    <div id="preview"></div>
+    <button id="addNewImage">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-photo-plus" viewBox="0 0 24 24" stroke-width="1.5" stroke="#597e8d" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M15 8h.01" />
+            <path d="M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5" />
+            <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l4 4" />
+            <path d="M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54" />
+            <path d="M16 19h6" />
+            <path d="M19 16v6" />
+        </svg>
+    </button>
+    <div id="gif-container"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const newImageUpload = document.getElementById('newImageUpload');
+        const createGifButton = document.getElementById('createGif');
+        const previewContainer = document.getElementById('preview');
+        const gifContainer = document.getElementById('gif-container');
+        const frameIntervalInput = document.getElementById('frameInterval');
+        const addNewImageButton = document.getElementById('addNewImage');
+        let images = [];
+        let width, height;
+
+        const updatePreview = () => {
+            previewContainer.innerHTML = '';
+            images.forEach((img, index) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                const imgElement = document.createElement('img');
+                imgElement.src = img.src;
+                previewItem.appendChild(imgElement);
+                const fileNumber = document.createElement('div');
+                fileNumber.textContent = `图片 ${index + 1}`;
+                previewItem.appendChild(fileNumber);
+
+                const removeButton = document.createElement('button');
+                removeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-circle-x" viewBox="0 0 24 24" stroke-width="2" stroke="#ff0000" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                    <path d="M10 10l4 4m0 -4l-4 4" />
+                </svg>`;
+                removeButton.addEventListener('click', () => {
+                    images.splice(index, 1);
+                    updatePreview();
+                });
+                previewItem.appendChild(removeButton);
+
+                previewContainer.appendChild(previewItem);
+            });
+        };
+
+        const handleFiles = (files) => {
+            for (const file of files) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        images.push(img);
+                        if (!width || !height) {
+                            width = img.width;
+                            height = img.height;
+                        }
+                        updatePreview();
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        imageUpload.addEventListener('change', (event) => {
+            handleFiles(event.target.files);
+        });
+
+        newImageUpload.addEventListener('change', (event) => {
+            handleFiles(event.target.files);
+        });
+
+        addNewImageButton.addEventListener('click', () => {
+            newImageUpload.click();
+        });
+
+        createGifButton.addEventListener('click', () => {
+            if (images.length === 0) {
+                alert('请先上传一些图片！');
+                return;
+            }
+
+            const frameInterval = parseInt(frameIntervalInput.value) || 500;
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 1, // 调高质量设置
+                width: width,
+                height: height
+            });
+
+            images.forEach(img => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                gif.addFrame(canvas, { delay: frameInterval });
+            });
+
+            gif.on('finished', (blob) => {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(blob);
+                gifContainer.innerHTML = '';
+                gifContainer.appendChild(img);
+            });
+
+            gif.render();
+        });
+    </script>
+</body>
+</html>
