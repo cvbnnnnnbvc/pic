@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>思维导图-制作</title>
+  <title>思维导图 制作</title>
   <script src="go.js"></script>
   <style>
     html, body {
@@ -83,7 +83,6 @@
       width: 100%;
       border-radius: 5px;
     }
-
   </style>
 </head>
 <body>
@@ -94,11 +93,11 @@
     <button id="removeButton">删除</button>
     <input type="color" id="nodeColor" value="#ADD8E6"> <!-- 默认蓝色 -->
     <input type="color" id="textColor" value="#FFFFFF"> <!-- 默认白色 -->
-    <button id="updateButton">换颜色</button>
+    <button id="updateButton">换色</button>
     <button id="exportButton">导出</button>
     <div id="exportMenu">
-      <button id="exportImage">导出图片</button>
-      <button id="exportData">导出数据</button>
+      <button id="exportData">导出数据（JSON）</button>
+      <button id="exportImage">储存为图片（PNG）</button>
     </div>
   </div>
   <script>
@@ -268,6 +267,16 @@
       function loadDiagramFromJson(jsonData) {
         myDiagram.model = go.Model.fromJson(jsonData);
       }
+
+      // 监听点击事件，点击上拉菜单以外的区域时隐藏菜单
+      document.addEventListener('click', function(event) {
+        var exportMenu = document.getElementById('exportMenu');
+        var exportButton = document.getElementById('exportButton');
+        if (exportMenu.style.display === 'block' && !exportMenu.contains(event.target) && event.target !== exportButton) {
+          exportMenu.style.display = 'none';
+        }
+      });
+
     }
 
     // 初始化思维导图
