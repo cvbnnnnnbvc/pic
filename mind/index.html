@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>思维导图示例</title>
+  <title>思维导图-制作</title>
   <script src="go.js"></script>
   <style>
     html, body {
@@ -31,6 +31,7 @@
       background-color: #ebebeb;
       box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
       padding: 10px 0;
+      position: relative;
     }
     button, input[type="color"] {
       margin: 0 6px;
@@ -67,17 +68,38 @@
       margin: 0 10px;
       font-weight: bold;
     }
+    #exportMenu {
+      display: none;
+      position: absolute;
+      bottom: 60px;
+      background-color: #919191;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 10;
+    }
+    #exportMenu button {
+      margin: 5px 0;
+      width: 100%;
+      border-radius: 5px;
+    }
+
   </style>
 </head>
 <body>
   <div id="myDiagramDiv"></div>
   <div id="controls">
+    <button id="importButton">导入</button>
     <button id="addButton">增加</button>
     <button id="removeButton">删除</button>
-    <input type="color" id="nodeColor" value=#ADD8E6> <!-- 默认蓝色 -->
+    <input type="color" id="nodeColor" value="#ADD8E6"> <!-- 默认蓝色 -->
     <input type="color" id="textColor" value="#FFFFFF"> <!-- 默认白色 -->
     <button id="updateButton">换颜色</button>
-    <button id="downloadButton">下载</button>
+    <button id="exportButton">导出</button>
+    <div id="exportMenu">
+      <button id="exportImage">导出图片</button>
+      <button id="exportData">导出数据</button>
+    </div>
   </div>
   <script>
     function init() {
@@ -183,8 +205,23 @@
         }
       });
 
-      // 下载图片
-      document.getElementById('downloadButton').addEventListener('click', function() {
+      // 导出菜单显示隐藏
+      document.getElementById('exportButton').addEventListener('click', function() {
+        var exportMenu = document.getElementById('exportMenu');
+        if (exportMenu.style.display === 'none' || exportMenu.style.display === '') {
+          exportMenu.style.display = 'block';
+        } else {
+          exportMenu.style.display = 'none';
+        }
+      });
+
+      // 导出为图片
+      document.getElementById('exportImage').addEventListener('click', function() {
+        exportDiagramAsImage();
+        document.getElementById('exportMenu').style.display = 'none';
+      });
+
+      function exportDiagramAsImage() {
         var img = myDiagram.makeImage({
           scale: 2, // 增加缩放比例以提高分辨率
           background: "white"
@@ -195,7 +232,42 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      }
+
+      // 导出为数据
+      document.getElementById('exportData').addEventListener('click', function() {
+        var jsonData = myDiagram.model.toJson();
+        var blob = new Blob([jsonData], { type: 'application/json' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '思维导图.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        document.getElementById('exportMenu').style.display = 'none';
       });
+
+      // 导入数据
+      document.getElementById('importButton').addEventListener('click', function() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function(event) {
+          var file = event.target.files[0];
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var jsonData = e.target.result;
+            loadDiagramFromJson(jsonData);
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      });
+
+      // 根据JSON数据加载思维导图
+      function loadDiagramFromJson(jsonData) {
+        myDiagram.model = go.Model.fromJson(jsonData);
+      }
     }
 
     // 初始化思维导图
